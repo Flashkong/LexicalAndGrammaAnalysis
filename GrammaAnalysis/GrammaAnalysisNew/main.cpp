@@ -13,18 +13,21 @@ string getFilePath(){
     return path;
 }
 
-void getFileContent(const string &file_path,vector<string>& list){
+string getFileContent(const string &file_path,vector<string>& list){
     ifstream input_file;
     input_file.open(file_path);
+    string total;
     if(!input_file){
-        cout<<"打开文件错误！"<<endl;
+        cout<<"无法打开输入文件！"<<endl;
     } else{
         string line;
         while(getline(input_file, line))
         {
             list.push_back(line);
+            total+=line+"\n";
         }
     }
+    return total;
 }
 
 void outPutFile(string content , string file_name){
@@ -34,19 +37,20 @@ void outPutFile(string content , string file_name){
         out_file<<content;
         out_file.close();
     } else{
-        cout<<"写文件失败！"<<endl;
+        cout<<"写入文件时错误！"<<endl;
     }
 }
 
 int main() {
     GradientDescentAnalyzer analyzer;
     string dyd_file_path=getFilePath();
-    getFileContent(dyd_file_path,analyzer.list);
+    string dyd_content = getFileContent(dyd_file_path,analyzer.list);
 
     analyzer.GrammaAnalysis();
 
     outPutFile(analyzer.varMessage,"eee.var");
     outPutFile(analyzer.funMessage,"eee.pro");
     outPutFile(analyzer.errorMessage,"eee.err");
+    outPutFile(dyd_content,"eee.dys");
     return 0;
 }

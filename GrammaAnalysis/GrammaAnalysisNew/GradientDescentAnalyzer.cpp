@@ -8,8 +8,7 @@
 using namespace std;
 
 /*
- * 问题统计:todo 错误说明那里要加一个行号说明第几行出了问题
- * todo 把结果写到那两个文件中
+ * 问题统计: 全部完成
  */
 
 /*
@@ -268,7 +267,7 @@ public:
                     error("缺少end");
                 }
             } else{
-                error("缺少';'号");
+                error("缺少';'号",this->line-1);
             }
         } else{
             error("缺少begin");
@@ -300,11 +299,16 @@ public:
          *
          * 由于statementTable函数执行结束有一个;  那么这里的sym一定就是;  这时候预读取下一个sym，判断还是不是说明语句
          */
+
         int a=num+1;
         while (decodeSymCode(a)==EOLN){
             a++;
         }
-        if(decodeSymCode(a)==INTEGER_CODE){
+        if(sym_code==INTEGER_CODE){
+            error("缺少;号",this->line-1);
+            statement();
+            statementTable___();
+        }else if(decodeSymCode(a)==INTEGER_CODE){
             advance();
             statement();
             statementTable___();
@@ -368,7 +372,6 @@ public:
             }
         } else{
             //error("函数声明中缺少function保留字");
-            //todo 这里有问题，如果错误的把function少些了一个字母，那么就匹配不到function转而去匹配变量，如果变量也没有匹配成功，
             // 那么我给的错误提示就出错了
             variable(DECLARE,ISVARIABLE);
         }
@@ -394,9 +397,12 @@ public:
                 /*
                  * 首先要检测是不是表里面已经存在了这个变量
                  */
-                if(isInItVar2(varList,sym)==HAVEANDVAR||isInItVar2(varList,sym)==HAVEANDPRA){
-                    //如果在表里面存在，并且存在的那个是变量或者是参数，那么就是变量重复声明
+                if(isInItVar2(varList,sym)==HAVEANDVAR){
+                    //如果在表里面存在，并且存在的那个是变量，那么就是变量重复声明
                     error(sym+"变量重复声明");
+                    advance();
+                } else if(isInItVar2(varList,sym)==HAVEANDPRA){
+                    //变量表中存在，但是是参数的时候，就什么都不做
                     advance();
                 } else {
                     //加入变量表里面
@@ -436,8 +442,10 @@ public:
                 /*
                  * 首先要检测是不是表里面已经存在了这个变量
                  */
-                if(isInItPra(varList,sym)==HAVEANDPRA||isInItPra(varList,sym)==HAVEANDVAR){
+                if(isInItPra(varList,sym)==HAVEANDPRA){
                     error(sym+"参数重复声明");
+                    advance();
+                } else if(isInItPra(varList,sym)==HAVEANDVAR){
                     advance();
                 } else {
                     //加入变量表里面
@@ -462,7 +470,7 @@ public:
              * 要检查变量表当中是否有这个变量，即这个变量是否声明了
              */
             if(fromPos==ISVARIABLE){
-                if(!isInItUse(varList,sym)){
+                if(!isInItUse(varList,sym)&&!isInItFun(funList,sym)){
                     error(sym+"变量未声明");
                     advance();
                 } else
@@ -513,9 +521,10 @@ public:
                     advance();
                 } else{
                     error("函数体缺少end");
+                    this->line++;
                 }
             } else{
-                error("函数体中缺少分号");
+                error("函数体中缺少分号",this->line-1);
             }
         } else{
             error("函数体缺少begin");
@@ -847,9 +856,11 @@ public:
         }
     }
 
-    void error(string message){
-        this->errorMessage+=("***LINE:"+to_string(this->line)+"  "+message+"\n");
-        cout<<"***LINE:"<<line<<"  "<<message<<endl;
+    void error(string message,int myline=-10){
+        if(myline==-10)
+            myline=line;
+        this->errorMessage+=("***LINE:"+to_string(myline)+"  "+message+"\n");
+        cout<<"***LINE:"<<myline<<"  "<<message<<endl;
     }
 
     void getVarInFun(){

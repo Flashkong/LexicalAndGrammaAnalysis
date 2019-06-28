@@ -77,8 +77,13 @@ BIN LexAnalyze(string content){
             token.push_back(content[num]);
         }
         num--;//回退
-        int result =reserve(token);
-        return {token,result};
+        if(token.length()>16){
+            return {"error",-3};    //如果长度太长，则溢出
+        } else{
+            int result =reserve(token);
+            return {token,result};
+        }
+
     } else if(48 <= next_char && next_char <= 57){
         //如果第一个字符是1-9
         token.push_back(next_char);
@@ -86,7 +91,11 @@ BIN LexAnalyze(string content){
             token.push_back(content[num]);
         }
         num--;//回退
-        return {token,11};
+        if(token.length()>16){
+            return {"error",-3};    //如果长度太长则溢出
+        } else{
+            return {token,11};
+        }
     } else if(next_char=='<'){
         num++;
         if(content[num]=='=')
@@ -101,9 +110,6 @@ BIN LexAnalyze(string content){
         num++;
         if(content[num]=='=')
             return {">=",16};
-        else if(content[num]=='<'){
-            return {"error",-3};        //如果是><则出错
-        }
         else{
             num--;
             return {">",17};
@@ -143,15 +149,15 @@ int main() {
     string output_err;
     string example="                "; //16个空格
     while (num<file_content.length()){
+        isError=false;
         BIN a=LexAnalyze(file_content);
         num++;
-//        cout<<a.num<<" "<<a.val<<endl;
 
-        //检测错误
+        //检测错误，如果有错误
         if(a.val<0){
             isError=true;
-            output_err.append(example,0,12).append("LINE:").append(to_string(line))
-                    .append("  ").append(to_string(abs(a.val))).append("\n");
+            output_err.append("***LINE:")
+                    .append(":").append(to_string(line)).append("  ").append(to_string(abs(a.val))).append("\n");
         }
 
         if(!isError){
@@ -162,14 +168,10 @@ int main() {
             } else{
                 output_dyd.append(to_string(a.val)).append("\n");
             }
-        } else{
-            output_dyd="";
         }
     }
-    if(!isError)
-        output_dyd.append(example,0,16-3).append("EOF").append(" ").append(to_string(25));
-//    cout<<output_dyd;
-//    cout<<output_err;
+//    if(!isError)
+    output_dyd.append(example,0,16-3).append("EOF").append(" ").append(to_string(25));
 
     //输出字符串内容到文件里面
     string output_path=file_path.substr(0,file_path.find_last_of("/\\")).append("\\");
